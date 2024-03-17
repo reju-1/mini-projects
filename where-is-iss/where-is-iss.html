@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ISS Current Location</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <h3>ISS Current Location</h3>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([0, 0], 3); // Default center and increased zoom
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        async function updateISSLocation() {
+            try {
+                const response = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+                const data = await response.json();
+
+                const issCoordinates = [data.latitude, data.longitude];
+
+                // Clear existing marker
+                if (map.issMarker) {
+                    map.removeLayer(map.issMarker);
+                }
+
+                // Create a new marker at the updated ISS location
+                map.issMarker = L.marker(issCoordinates).addTo(map)
+                    .bindPopup('International Space Station (ISS)')
+                    .openPopup();
+
+                // Update map center to the ISS location
+                // map.setView(issCoordinates, 4); // Adjust zoom level as needed
+                map.setView(issCoordinates); // Adjust zoom level as needed
+            } catch (error) {
+                console.error('Error fetching ISS location:', error);
+            }
+        }
+
+        // Fetch ISS location every 3 seconds (3000 milliseconds)
+        // This API has rate limit 
+        setInterval(updateISSLocation, 3000);
+        updateISSLocation(); // Call immediately to update location on load
+    </script>
+</body>
+
+</html>
